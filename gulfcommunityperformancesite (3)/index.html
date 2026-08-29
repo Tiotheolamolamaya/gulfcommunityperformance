@@ -217,6 +217,7 @@
     border-radius: 999px;
     box-shadow: 0 12px 40px -8px rgba(38,92,179,0.55);
     cursor: pointer;
+    font: inherit;
   }
   .chat-cta .dot {
     width: 34px; height: 34px; border-radius: 50%;
@@ -225,6 +226,109 @@
     color: #fff; flex: 0 0 auto;
   }
   .chat-cta span { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; }
+  .chat-panel {
+    position: fixed;
+    right: 28px;
+    bottom: 96px;
+    z-index: 50;
+    width: 360px;
+    max-width: calc(100vw - 40px);
+    height: 500px;
+    max-height: calc(100vh - 160px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 24px 64px -12px rgba(0,0,0,0.6);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .chat-panel.open { display: flex; }
+  .chat-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+  }
+  .chat-panel-header img { height: 22px; width: auto; }
+  .chat-panel-header .title { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.3px; }
+  .chat-panel-header .sub { font-size: 11px; color: var(--text-dim); }
+  .chat-panel-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 6px;
+    display: flex;
+    min-height: unset;
+  }
+  .chat-panel-close:hover { color: #fff; }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chat-msg {
+    max-width: 84%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .chat-msg.bot {
+    align-self: flex-start;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+  .chat-msg.user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-msg.typing { color: var(--text-dim); font-style: italic; }
+  .chat-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-elevated);
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 11px 16px;
+    color: #fff;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 13.5px;
+    outline: none;
+  }
+  .chat-input:focus { border-color: var(--accent); }
+  .chat-input::placeholder { color: var(--text-dim); }
+  .chat-send {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+    min-height: unset;
+  }
+  .chat-send:hover { background: #2f6ac6; }
+  .chat-send:disabled { opacity: 0.5; cursor: default; }
   @media (max-width: 860px) {
     .nav { padding: 14px 20px; }
     .nav-links { display: none; }
@@ -238,6 +342,7 @@
     .footer-meta { align-items: flex-start; }
     .chat-cta span { display: none; }
     .chat-cta { padding: 10px; }
+    .chat-panel { right: 16px; left: 16px; width: auto; bottom: 88px; }
   }
   @media (max-width: 520px) {
     .programs-grid { grid-template-columns: 1fr; }
@@ -410,15 +515,117 @@
     </div>
   </footer>
 
-  <div class="chat-cta">
+  <button class="chat-cta" id="chatLauncher" type="button" aria-label="Open GCP chat assistant">
     <div class="dot">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 12a8 8 0 1 1 3.3 6.4L4 20l1.2-3.6A7.96 7.96 0 0 1 4 12z"></path>
       </svg>
     </div>
     <span>Ask GCP about schedules, membership &amp; races</span>
+  </button>
+
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-panel-header">
+      <img src="assets/logo.png" alt="">
+      <div>
+        <div class="title">GCP Assistant</div>
+        <div class="sub">Membership, schedules &amp; races</div>
+      </div>
+      <button class="chat-panel-close" id="chatClose" type="button" aria-label="Close chat">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg bot">Hey! I'm the GCP Assistant. Ask me about membership, group runs, or our partner race discounts.</div>
+    </div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chatInput" type="text" placeholder="Type a message…" autocomplete="off">
+      <button class="chat-send" id="chatSend" type="button" aria-label="Send message">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+      </button>
+    </div>
   </div>
 
 </div>
+
+<script>
+(function () {
+  // ---- CONFIGURE THIS: paste the "Production URL" of the Chat Webhook node
+  // from the n8n workflow after you import and activate it.
+  var N8N_WEBHOOK_URL = "https://nebulawebonline.app.n8n.cloud/webhook/gcp-chat";
+
+  var launcher = document.getElementById('chatLauncher');
+  var panel = document.getElementById('chatPanel');
+  var closeBtn = document.getElementById('chatClose');
+  var messages = document.getElementById('chatMessages');
+  var input = document.getElementById('chatInput');
+  var sendBtn = document.getElementById('chatSend');
+
+  function getSessionId() {
+    try {
+      var id = localStorage.getItem('gcp_chat_session');
+      if (!id) {
+        id = 'gcp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('gcp_chat_session', id);
+      }
+      return id;
+    } catch (e) {
+      return 'gcp-' + Date.now();
+    }
+  }
+
+  function addMessage(text, who) {
+    var el = document.createElement('div');
+    el.className = 'chat-msg ' + who;
+    el.textContent = text;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+    return el;
+  }
+
+  function togglePanel(open) {
+    panel.classList.toggle('open', open);
+    if (open) input.focus();
+  }
+
+  launcher.addEventListener('click', function () { togglePanel(!panel.classList.contains('open')); });
+  closeBtn.addEventListener('click', function () { togglePanel(false); });
+
+  function send() {
+    var text = input.value.trim();
+    if (!text) return;
+    addMessage(text, 'user');
+    input.value = '';
+    sendBtn.disabled = true;
+    var typing = addMessage('…', 'bot typing');
+
+    fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: getSessionId(), message: text })
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('bad response');
+        return res.json();
+      })
+      .then(function (data) {
+        typing.remove();
+        addMessage(data.reply || "Sorry, I didn't catch that — could you try again?", 'bot');
+      })
+      .catch(function () {
+        typing.remove();
+        addMessage("I'm having trouble connecting right now. Please try again in a moment, or use the Join Now button above to reach us directly.", 'bot');
+      })
+      .finally(function () {
+        sendBtn.disabled = false;
+      });
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') send();
+  });
+})();
+</script>
 </body>
 </html>
